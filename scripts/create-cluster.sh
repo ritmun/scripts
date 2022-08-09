@@ -9,14 +9,14 @@ export CLUSTER_ID=$(ocm get /api/clusters_mgmt/v1/clusters --parameter search="m
 
 # Wait for cluster to finish installing.
 CLUSTER_STATE=$(ocm get /api/clusters_mgmt/v1/clusters/$CLUSTER_ID | jq -r '.status.state')
-echo "Cluster state is '$CLUSTER_STATE'.  Waiting until it changes state.  Checks every 10 seconds."
+echo "Cluster state is '$CLUSTER_STATE'.  Waiting until it changes to installed. This may take up to 40 minutes. Checks every 10 seconds."
  
-while [ "$CLUSTER_STATE" = "installing" ] || [ "$CLUSTER_STATE" = "pending" ]; do
+while  [ "$CLUSTER_STATE" = "installing" ]||[ "$CLUSTER_STATE" = "inpendingstalling" ]; do
   sleep 10
   CLUSTER_STATE=$(ocm get /api/clusters_mgmt/v1/clusters/$CLUSTER_ID | jq -r '.status.state')
-  printf "Cluster is now in state %s." "$CLUSTER_STATE"
+  printf "Cluster is in state %s." "$CLUSTER_STATE"
 done
 printf "Cluster is now in state %s." "$CLUSTER_STATE"
-printf  "\nDo the following to finish hypershift install.\n
-1.Log in to cluster %s:\n ocm backplane tunnel %s \n   ocm backplane login %s \n 
-2.Run hshift install:\n CLUSTER_ID =%s  ./install-hshift.sh" "$CLUSTER_ID"
+printf  "\nProceed with the following to finish hypershift install.\n
+1.Log in to cluster %s:\nocm backplane tunnel %s\nocm backplane login %s\n 
+2.Run hshift install:\nCLUSTER_ID=%s  ./install-hshift.sh" "$CLUSTER_ID" "$CLUSTER_ID" "$CLUSTER_ID" "$CLUSTER_ID"

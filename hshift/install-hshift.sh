@@ -22,7 +22,7 @@ aws_secret_access_key = $(oc -n kube-system get secret aws-creds -o json | jq -r
 EOF
   fi
   echo -e "\nCreating AWS creds file with default profile '$CLUSTER_AWS_CREDS_FILE'."
-  cat <<EOF >$CLUSTER_AWS_CREDS_FILE
+  cat <<EOF >"$CLUSTER_AWS_CREDS_FILE"
 [default]
 aws_access_key_id = $(oc -n kube-system get secret aws-creds -o json | jq -r .'data["aws_access_key_id"]' | base64 --decode)
 aws_secret_access_key = $(oc -n kube-system get secret aws-creds -o json | jq -r .'data["aws_secret_access_key"]' | base64 --decode)
@@ -44,7 +44,7 @@ CMD_AWS_CREATE_BUCKET="aws s3api create-bucket --acl public-read --bucket $OIDC_
 if [ "$REGION" != "us-east-1" ]; then
   CMD_AWS_CREATE_BUCKET="$CMD_AWS_CREATE_BUCKET --create-bucket-configuration LocationConstraint=$REGION"
 fi
-eval $CMD_AWS_CREATE_BUCKET
+eval "$CMD_AWS_CREATE_BUCKET"
 
 # Login to cluster.
 echo -e "\nLogging in to cluster '$CLUSTER_ID'."
@@ -57,13 +57,10 @@ echo -e "\nCalling commands inside cluster '$CLUSTER_ID'."
 # Grant yourself cluster-admin permissions so you can use the hypershift cli.
 oc adm policy add-cluster-role-to-user cluster-admin $(oc whoami) --as backplane-cluster-admin
 
-echo -e "\nRunning /usr/local/bin/hypershift install   
-  --oidc-storage-provider-s3-bucket-name $OIDC_BUCKET_NAME  
-  --oidc-storage-provider-s3-credentials $CLUSTER_AWS_CREDS_FILE                     
-  --oidc-storage-provider-s3-region $REGION ."
+echo -e "\nRunning /usr/local/bin/hypershift install."
 export AWS_PROFILE=default
 /usr/local/bin/hypershift install \
-  --oidc-storage-provider-s3-bucket-name $OIDC_BUCKET_NAME \
-  --oidc-storage-provider-s3-credentials $CLUSTER_AWS_CREDS_FILE \
-  --oidc-storage-provider-s3-region $REGION
+  --oidc-storage-provider-s3-bucket-name "$OIDC_BUCKET_NAME" \
+  --oidc-storage-provider-s3-credentials "$CLUSTER_AWS_CREDS_FILE" \
+  --oidc-storage-provider-s3-region "$REGION"
 
